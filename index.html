@@ -23,15 +23,18 @@ svg{width:100%;height:auto;display:block}svg text{fill:var(--mu);font-size:10px}
 .lt .l1{border-left-color:var(--a)}.lt .l2{border-left-color:var(--r)}
 .hl{display:flex;flex-wrap:wrap;gap:6px}.hl span{border:1px solid var(--bd);border-radius:6px;padding:3px 8px;font-size:13px}.hl .hi{border-color:var(--a);color:var(--a);font-weight:600}
 table{border-collapse:collapse;width:100%;font-size:13px}td,th{padding:4px 6px;border-bottom:1px solid var(--bd);text-align:right}th:first-child,td:first-child{text-align:left}
+.s0{color:var(--g)}.s1{color:var(--a)}.s2{color:var(--r)}
 details pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace}.p{margin-bottom:8px}
 </style></head><body>
 <h1>Garcia River Watch · Oz Farm <span class="mu" id="upd"></span></h1>
 <div class="mu"><span id="loc"></span> · <a href="#" id="setloc">📍 Set my location</a></div>
-<nav><a href="#s0">Status</a><a href="#s1">River</a><a href="#s2">Tides</a><a href="#s3">Waves</a><a href="#s4">Rain</a><a href="#s5">Forecast</a><a href="#s6">Maps</a><a href="#s7">Live</a><a href="#s8">Links</a></nav>
+<nav><a href="#s0">Status</a><a href="#s1">River</a><a href="#s9">Roads</a><a href="#s2">Tides</a><a href="#s3">Waves</a><a href="#s4">Rain</a><a href="#s5">Forecast</a><a href="#s6">Maps</a><a href="#s7">Live</a><a href="#s8">Links</a></nav>
 
 <h3 id="s0">STATUS</h3><div class="grid">
 <div class="card wide"><h2>Status lights (rough guide – thresholds in CFG are guesses, tune them). Tab-title dot = river only; "Overall" = worst light</h2><div id="lt" class="lt mu">Loading…</div></div>
-<div class="card wide"><h2>NWS alerts for this point</h2><div id="al" class="mu">Loading…</div></div></div>
+<div class="card wide"><h2>NWS alerts for this point</h2><div id="al" class="mu">Loading…</div></div>
+<div class="card wide"><h2>Rain ahead, inches (lowest–highest of the models)</h2><div class="row" id="ra">Loading…</div></div>
+<div class="card wide"><h2>Danger windows: high tide (plus current ocean anomaly) with rain in the 12 h before, next 7 days</h2><div class="hl" id="dw">Loading…</div><div class="mu">Orange = a big tide or heavy rain; red = both. Rain is one model; the anomaly is assumed to persist.</div></div></div>
 
 <h3 id="s1">RIVER</h3><div class="grid">
 <div class="card wide"><h2>Garcia at Eureka Hill Rd (GRCC1 / USGS 11467590): observed 7 days + NWS forecast, ft</h2>
@@ -41,6 +44,11 @@ details pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace}.p{margin-
 <div class="card"><h2>Garcia flow, 7 days (cfs)</h2><div id="rq" class="mu"></div></div>
 <div class="card"><h2>Navarro River stage, 7 days (ft)</h2><div id="rnv" class="mu"></div></div></div>
 <div class="grid" id="rimgs"></div>
+
+<h3 id="s9">ROADS</h3><div class="grid">
+<div class="card wide"><h2>Road watch: river level vs. levels where roads have flooded</h2><div id="rw" class="mu">Loading…</div><div class="mu">Levels come from news reports or are blank for you to fill in (ROADS in the script). Guides only, not official closure data.</div></div>
+<div class="card"><h2>Caltrans closures in effect (Mendocino, Hwys 1, 128, 175, 101)</h2><div id="lcs" class="mu">Loading…</div></div>
+<div class="card"><h2>Check live road status</h2><div class="links"><a href="https://quickmap.dot.ca.gov" target="_blank">Caltrans QuickMap</a><a href="https://roads.dot.ca.gov/roadscell.php?roadnumber=1" target="_blank">Hwy 1 conditions</a><a href="https://roads.dot.ca.gov/roadscell.php?roadnumber=128" target="_blank">Hwy 128 conditions</a><a href="https://cad.chp.ca.gov/" target="_blank">CHP incidents (Ukiah)</a><a href="https://mendoready.org" target="_blank">MendoReady</a><a href="https://mendovoice.com" target="_blank">Mendocino Voice</a><a href="https://lostcoastoutpost.com" target="_blank">Lost Coast Outpost</a></div></div></div>
 
 <h3 id="s2">TIDES · ARENA COVE (9416841)</h3><div class="grid">
 <div class="card wide"><h2>Predicted vs actual, ft MLLW</h2><div id="td" class="mu">Loading…</div><div class="leg" id="tdl"></div></div>
@@ -54,9 +62,9 @@ details pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace}.p{margin-
 <div class="links mu"><a href="https://www.ndbc.noaa.gov/station_page.php?station=46014" target="_blank">Buoy 46014</a><a href="https://cdip.ucsd.edu/" target="_blank">CDIP</a><a href="https://www.weather.gov/eka/marine" target="_blank">NWS marine</a></div></div></div>
 
 <h3 id="s4">RAIN & SOIL</h3><div class="grid">
-<div class="card wide"><h2>Model comparison · cumulative inches from now (10 days)</h2><div id="rn2" class="mu">Loading…</div><div class="leg" id="rnl"></div><div class="mu">Far apart = low confidence.</div></div>
+<div class="card wide"><h2>Model comparison · cumulative inches from now (up to 16 days; shorter models stop early)</h2><div id="rn2" class="mu">Loading…</div><div class="leg" id="rnl"></div><div class="mu">Far apart = low confidence.</div></div>
 <div class="card wide"><h2>Rain totals by model (inches)</h2><div id="tb" class="mu"></div></div>
-<div class="card wide"><h2>Hourly rain (in), past 3 days + next 7</h2><div id="hr" class="mu"></div></div>
+<div class="card wide"><h2>Hourly rain (in), next 10 days</h2><div id="hr" class="mu"></div></div>
 <div class="card"><h2>Soil moisture (m³/m³) – high & rising = less ground to absorb rain</h2><div id="sm" class="mu"></div><div class="leg" id="sml"></div></div>
 <div class="card"><h2>Pressure (hPa) – sharp drops = storm + higher sea level</h2><div id="ps" class="mu"></div></div>
 <div class="card"><h2>Wind & gusts (mph)</h2><div id="wi" class="mu"></div><div class="leg" id="wil"></div></div></div>
@@ -75,7 +83,11 @@ details pre{white-space:pre-wrap;font:12px/1.4 ui-monospace,monospace}.p{margin-
 let LAT=38.97,LON=-123.69;const SLAT=38.9,SLON=-123.8,ST='9416841';
 const ALERT_FT=12,HIGH_TIDE_FT=7.0;
 const LINES=[[10,'#b54708','10 ft'],[ALERT_FT,'#b42318','12 ft alert'],[13.6,'#7f1d1d','13.6 ft Hwy 1 closed (Nov 2024 news)']];
-const CFG={rise:[0.5,1.0],anom:[0.75,1.5],rain48:[2,4],soil:[0.40,0.46]}; // amber, red
+// [road, gauge 'g'=Garcia 'n'=Navarro, flooding-possible ft, closed ft, note]. Edit these to what you have seen.
+const ROADS=[['Hwy 1 at Garcia River',"g",11,13.6,'News reports: flooding on Hwy 1 around 11 ft, closures around 13.6–14 ft (Nov 2024, Dec 2025).'],
+['Hwy 128 at Navarro',"n",null,null,'Depends on the Navarro River level and the sandbar at its mouth. Add your own levels.'],
+['Mountain View Rd',"g",null,null,'County road: add the Garcia stage where it floods, or check MendoReady / the county.']];
+const CFG={rise:[0.5,1.0],anom:[0.75,1.5],rain48:[2,4],soil:[0.40,0.46],dwRain:0.5}; // amber, red
 const CAMS=[ // ['Name','image URL'] – paste Caltrans/other camera image URLs here
 ];
 const IMGS=[
@@ -98,14 +110,12 @@ const IMGS=[
 ['Pacific surface analysis (OPC)','https://ocean.weather.gov/P_sfc_full_ocean_color.png','https://ocean.weather.gov'],
 ];
 const RIMGS=[['NWS river forecast hydrograph (GRCC1)','https://water.noaa.gov/resources/hydrographs/grcc1_hg.png','https://water.noaa.gov/gauges/GRCC1'],
-['NWS hydrograph with history','https://water.noaa.gov/resources/hydrographs/grcc1_record.png','https://water.noaa.gov/gauges/GRCC1'],
-['Short-range ensemble forecast','https://water.noaa.gov/resources/probabilistic/short_term/GRCC1.shortrange.hefs.png','https://www.cnrfc.noaa.gov/ensembleProduct.php?id=GRCC1'],
-['Weekly stage probability','https://water.noaa.gov/resources/probabilistic/exceedance/GRCC1.SSTG.prob.weekint.gif','https://www.cnrfc.noaa.gov/ensembleProduct.php?id=GRCC1']];
+['NWS hydrograph with history','https://water.noaa.gov/resources/hydrographs/grcc1_record.png','https://water.noaa.gov/gauges/GRCC1']];
 const LINKS={
-'River & flood':[['NWPS gauge GRCC1','https://water.noaa.gov/gauges/GRCC1'],['CNRFC forecast GRCC1','https://www.cnrfc.noaa.gov/graphicalRVF.php?id=GRCC1'],['CNRFC ensemble','https://www.cnrfc.noaa.gov/ensembleProduct.php?id=GRCC1'],['CNRFC home','https://www.cnrfc.noaa.gov/'],['CDEC','https://cdec.water.ca.gov'],['USGS Garcia','https://waterdata.usgs.gov/monitoring-location/11467590/']],
+'River & flood':[['NWPS gauge GRCC1','https://water.noaa.gov/gauges/GRCC1'],['CNRFC forecast GRCC1','https://www.cnrfc.noaa.gov/graphicalRVF.php?id=GRCC1'],['CNRFC ensemble','https://www.cnrfc.noaa.gov/ensembleProduct.php?id=GRCC1'],['CNRFC home','https://www.cnrfc.noaa.gov/'],['CDEC','https://cdec.water.ca.gov'],['USGS Garcia','https://waterdata.usgs.gov/monitoring-location/11467590/'],['CNRFC 6-day rain forecast','https://www.cnrfc.noaa.gov/ol.php?type=QPF'],['CoCoRAHS rain gauges','https://www.cocorahs.org'],['CW3E watershed forecast','https://cw3e.ucsd.edu/']],
 'Models':[['Pivotal Weather','https://www.pivotalweather.com/model.php?p=qpf_acc'],['Pivotal HRRR','https://www.pivotalweather.com/model.php?m=hrrr'],['Pivotal ECMWF','https://www.pivotalweather.com/model.php?m=ecmwf_full'],['Tropical Tidbits','https://www.tropicaltidbits.com/analysis/models/'],['CW3E atmospheric river','https://cw3e.ucsd.edu/ar-forecasts/'],['Windy','https://www.windy.com/38.92/-123.69?rain'],['NWS Eureka','https://www.weather.gov/eka/'],['NWS Bay Area','https://www.weather.gov/mtr/']],
 'Tides, ocean & Kelvin wave':[['Arena Cove water levels','https://tidesandcurrents.noaa.gov/waterlevels.html?id=9416841'],['Arena Cove station','https://tidesandcurrents.noaa.gov/stationhome.html?id=9416841'],['Buoy 46014','https://www.ndbc.noaa.gov/station_page.php?station=46014'],['CDIP waves','https://cdip.ucsd.edu/'],['NOAA ENSO / Kelvin wave','https://www.cpc.ncep.noaa.gov/products/analysis_monitoring/enso_advisory/'],['Perigee/moon dates','https://www.timeanddate.com/astronomy/moon/distance.html']],
-'Roads, power, emergency':[['Caltrans QuickMap','https://quickmap.dot.ca.gov'],['Caltrans cams','https://cwwp2.dot.ca.gov/vm/streamlist.htm'],['CHP incidents','https://cad.chp.ca.gov/'],['MendoReady','https://mendoready.org'],['Genasys Protect (evac zones)','https://protect.genasys.com'],['PG&E outages','https://pgealerts.alerts.pge.com/outage-tools/outage-map/'],['ALERTCalifornia cams','https://alertcalifornia.org']],
+'Roads, power, emergency':[['Caltrans QuickMap','https://quickmap.dot.ca.gov'],['Hwy 1 conditions','https://roads.dot.ca.gov/roadscell.php?roadnumber=1'],['Hwy 128 conditions','https://roads.dot.ca.gov/roadscell.php?roadnumber=128'],['Caltrans cams','https://cwwp2.dot.ca.gov/vm/streamlist.htm'],['CHP incidents','https://cad.chp.ca.gov/'],['MendoReady','https://mendoready.org'],['Genasys Protect (evac zones)','https://protect.genasys.com'],['PG&E outages','https://pgealerts.alerts.pge.com/outage-tools/outage-map/'],['ALERTCalifornia cams','https://alertcalifornia.org']],
 'Local news & info':[['Point Arena weather hub','https://pointarena.ca.gov/weather'],['Mendocino Voice','https://mendovoice.com'],['Lost Coast Outpost','https://lostcoastoutpost.com'],['KZYX','https://www.kzyx.org'],['Drought Monitor','https://droughtmonitor.unl.edu']]};
 
 const $=s=>document.querySelector(s);
@@ -171,7 +181,7 @@ async function river(){try{const j=await J('https://waterservices.usgs.gov/nwis/
  $('#rate').textContent=(rate>=0?'+':'')+rate.toFixed(2)+' ft';$('#pk').textContent=pk[1].toFixed(1)+' ft';$('#nav').textContent=na.length?na[na.length-1][1].toFixed(1):'n/a';
  const ser=[{n:'Observed (USGS)',c:'#1f6f8b',p:st}];if(fc.length)ser.push({n:'NWS forecast',c:'#c2410c',p:fc,dash:1});
  lc($('#rv'),ser,{lines:LINES,now:1,h:270});leg('#rvl',ser);
- const fp=fc.length?fc.reduce((a,b)=>Math.max(a,b[1]),-1):null;$('#fpk').textContent=fp!=null?fp.toFixed(1)+' ft':'none issued';
+ const fp=fc.length?fc.reduce((a,b)=>Math.max(a,b[1]),-1):null;$('#fpk').textContent=fp!=null?fp.toFixed(1)+' ft':'none issued';window.GS=last[1];window.FP=fp;window.NS=na.length?na[na.length-1][1]:null;roads();
  $('#rvn').textContent=(fc.length?'NWS forecast runs to '+new Date(fc[fc.length-1][0]).toLocaleString()+'.':'No NWS stage forecast is issued right now (it usually appears only when significant rain is expected). Longer range: CNRFC ensemble link and the 10-day rain models below.')+' NWS has no official flood stage for this gauge, so the colored lines are your 12 ft alert plus levels from news reports.';
  lc($('#r30'),[{c:'#1f6f8b',p:all}],{lines:LINES,h:200});lc($('#rq'),[{c:'#4d7c0f',p:sl(qa)}],{now:1,h:200});lc($('#rnv'),[{c:'#9333ea',p:nv}],{now:1,h:200});
  set('river','River',last[1].toFixed(1)+' ft (red at '+ALERT_FT+')',last[1]>=ALERT_FT?2:last[1]>=ALERT_FT-2?1:0);
@@ -179,6 +189,22 @@ async function river(){try{const j=await J('https://waterservices.usgs.gov/nwis/
  if(fp!=null)set('fcr','Forecast peak',fp.toFixed(1)+' ft',fp>=ALERT_FT?2:fp>=ALERT_FT-2?1:0);
  }catch(e){$('#flow').textContent='Could not load gage'}}
 
+function roads(){const g=window.GS,fp=window.FP,n=window.NS;if(g==null)return;
+ const rows=ROADS.map(r=>{const v=r[1]=='g'?g:n,f=r[1]=='g'?fp:null;let t='Set levels in ROADS',l=-1;
+  if(r[3]!=null){l=(v>=r[3]||(f!=null&&f>=r[3]))?2:(r[2]!=null&&v>=r[2])?1:0;t=['Below flooding level','Flooding possible','Closing level reached or forecast'][l]}
+  return `<tr><td>${r[0]}</td><td>${v!=null?v.toFixed(1)+' ft':'n/a'}</td><td>${f!=null?f.toFixed(1)+' ft':'–'}</td><td>${r[2]??'–'} / ${r[3]??'–'}</td><td class="s${Math.max(l,0)}">${t}</td></tr><tr><td colspan="5" class="mu" style="text-align:left">${r[4]}</td></tr>`});
+ $('#rw').innerHTML='<table><tr><th>Road</th><th>Level now</th><th>Forecast peak</th><th>Floods / closes at (ft)</th><th>Status</th></tr>'+rows.join('')+'</table>';
+ const h=ROADS[0];if(h[3]!=null)set('hwy1','Hwy 1 at Garcia',g.toFixed(1)+' ft vs '+h[3],(g>=h[3]||(fp!=null&&fp>=h[3]))?2:g>=h[2]?1:0)}
+function windows(){const H=window.HIGHS,P=window.PR;if(!H||!P)return;const an=window.ANOM||0;
+ const out=H.map(h=>{const t=T(h.t),r=P.filter(p=>p[0]>t-12*36e5&&p[0]<=t).reduce((a,p)=>a+p[1],0),adj=+h.v+an,hi=adj>=HIGH_TIDE_FT;
+  return [t,adj,r,hi&&r>=CFG.dwRain?2:(hi||r>=CFG.dwRain*2)?1:0,+h.v]}).filter(x=>x[3]>0);
+ $('#dw').innerHTML=out.length?out.map(x=>`<span class="${x[3]==1?'hi':''}" style="${x[3]==2?'border-color:var(--r);color:var(--r);font-weight:600':''}">${new Date(x[0]).toLocaleString([],{weekday:'short',month:'numeric',day:'numeric',hour:'numeric',minute:'2-digit'})} · tide ${x[1].toFixed(1)} ft (predicted ${x[4].toFixed(1)}) · rain prior 12 h ${x[2].toFixed(1)} in</span>`).join(''):'None flagged in the next 7 days.';
+ set('dw','Tide + rain windows',out.length?out.length+' flagged':'none',Math.max(0,...out.map(x=>x[3])))}
+async function closures(){const el=$('#lcs');try{const j=await J('https://cwwp2.dot.ca.gov/data/d1/lcs/lcsStatusD01.json');
+ const fl=(o,r={})=>{for(const k in o){const v=o[k];if(v&&typeof v=='object')fl(v,r);else r[k]=v}return r};
+ const rows=(j.data||[]).map(x=>fl(x)).filter(r=>/mendocino/i.test(r.beginCounty||'')&&['1','128','175','101'].includes(String(r.beginRoute||'').replace(/\D/g,''))&&String(r.isCode1097)=='true'&&String(r.isCode1098)!='true'&&String(r.isCode1022)!='true');
+ el.innerHTML=(rows.length?rows.map(r=>`<div class="p"><b class="${/full/i.test(r.typeOfClosure)?'s2':''}">Hwy ${String(r.beginRoute).replace(/\D/g,'')} · ${r.typeOfClosure||''} closure</b> · ${r.beginNearbyPlace||r.beginLocationName||''}<br><span class="mu">${r.typeOfWork||''}</span></div>`).join(''):'None reported in the Caltrans lane-closure feed.')+'<div class="mu">This feed mostly lists planned work. Storm flood closures often appear only on QuickMap or CHP, so check those too.</div>'
+ }catch(e){el.textContent='Could not load the Caltrans closure feed. Use the links beside this card.'}}
 const moon=()=>{const sy=29.530588853,a=(((Date.now()-Date.UTC(2000,0,6,18,14))/864e5)%sy+sy)%sy,h=sy/2;
  const nm=a<1.85?'New':a<5.5?'Waxing crescent':a<9.2?'First quarter':a<12.9?'Waxing gibbous':a<16.6?'Full':a<20.3?'Waning gibbous':a<24?'Last quarter':a<27.7?'Waning crescent':'New';
  $('#moon').textContent=`Moon: ${nm} · next new in ${(sy-a).toFixed(0)} d · next full in ${(a<h?h-a:sy-a+h).toFixed(0)} d (new/full = bigger tides; closest-approach "perigee" makes king tides).`};
@@ -186,41 +212,42 @@ const moon=()=>{const sy=29.530588853,a=(((Date.now()-Date.UTC(2000,0,6,18,14))/
 async function tides(){
  const f=d=>d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'),n=new Date(),D=k=>new Date(+n+k*864e5);
  const b=`https://api.tidesandcurrents.noaa.gov/api/prod/datagetter?station=${ST}&datum=MLLW&time_zone=lst_ldt&units=english&format=json&application=oz_dash`;
- const [pr,ob,hl,kg]=await Promise.allSettled([J(b+`&product=predictions&begin_date=${f(D(-3))}&end_date=${f(D(4))}`),J(b+`&product=water_level&begin_date=${f(D(-3))}&end_date=${f(n)}`),J(b+`&product=predictions&interval=hilo&begin_date=${f(n)}&end_date=${f(D(7))}`),J(b+`&product=predictions&interval=hilo&begin_date=${f(n)}&end_date=${f(D(90))}`)]);
+ const [pr,ob,hl,kg]=await Promise.allSettled([J(b+`&product=predictions&begin_date=${f(D(-3))}&end_date=${f(D(7))}`),J(b+`&product=water_level&begin_date=${f(D(-3))}&end_date=${f(n)}`),J(b+`&product=predictions&interval=hilo&begin_date=${f(n)}&end_date=${f(D(7))}`),J(b+`&product=predictions&interval=hilo&begin_date=${f(n)}&end_date=${f(D(90))}`)]);
  const P=pr.value?.predictions||[],O=ob.value?.data||[],pm={};P.forEach(q=>pm[q.t]=+q.v);
- const ser=[{n:'Predicted',c:'#1f6f8b',p:P.map(q=>[T(q.t),+q.v]),dash:1},{n:'Actual',c:'#c2410c',p:O.map(q=>[T(q.t),+q.v]).filter(q=>!isNaN(q[1]))}];
+ const c0=Date.now()-36*36e5,ser=[{n:'Predicted',c:'#1f6f8b',p:P.map(q=>[T(q.t),+q.v]).filter(q=>q[0]>c0),dash:1},{n:'Actual',c:'#c2410c',p:O.map(q=>[T(q.t),+q.v]).filter(q=>!isNaN(q[1])&&q[0]>c0)}];
  lc($('#td'),ser,{now:1,h:260});leg('#tdl',ser);
  const rp=O.filter(q=>q.v!==''&&pm[q.t]!=null).map(q=>[T(q.t),+q.v-pm[q.t]]);
  if(rp.length){const l=rp[rp.length-1][1],a=rp.filter(q=>q[0]>Date.now()-864e5).map(q=>q[1]),av=a.reduce((x,y)=>x+y,0)/a.length,sg=v=>(v>=0?'+':'')+v.toFixed(2)+' ft';
-  $('#rn').textContent=sg(l);$('#r24').textContent=sg(av);lc($('#rc'),[{c:'#9333ea',p:rp}],{zero:1,h:150,now:1});set('anom','Tide anomaly',sg(av)+' (24h)',lvl(av,CFG.anom))}
+  $('#rn').textContent=sg(l);$('#r24').textContent=sg(av);window.ANOM=av;lc($('#rc'),[{c:'#9333ea',p:rp}],{zero:1,h:150,now:1});set('anom','Tide anomaly',sg(av)+' (24h)',lvl(av,CFG.anom))}
  const tag=q=>{const d=new Date(T(q.t));return `<span class="${+q.v>=HIGH_TIDE_FT?'hi':''}">${d.toLocaleDateString([],{weekday:'short',month:'numeric',day:'numeric'})} ${d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})} · ${(+q.v).toFixed(1)} ft</span>`};
- const H=(hl.value?.predictions||[]).filter(q=>q.type=='H');$('#hi').innerHTML=H.map(tag).join('')||'Unavailable';
+ const H=(hl.value?.predictions||[]).filter(q=>q.type=='H');$('#hi').innerHTML=H.map(tag).join('')||'Unavailable';window.HIGHS=H;windows();
  const K=(kg.value?.predictions||[]).filter(q=>q.type=='H').sort((a,b)=>b.v-a.v).slice(0,10).sort((a,b)=>T(a.t)-T(b.t));$('#kg').innerHTML=K.map(tag).join('')||'Unavailable';
  const nx=H.filter(q=>T(q.t)<Date.now()+2*864e5).reduce((m,q)=>Math.max(m,+q.v),0);
  if(nx)set('tide','High tide ≤48h',nx.toFixed(1)+' ft (flag '+HIGH_TIDE_FT+')',nx>=HIGH_TIDE_FT?1:0);
  const lat=async(p,el,fm)=>{try{const j=await J(b+`&product=${p}&date=latest`);$(el).textContent=fm(+j.data[0].v)}catch(e){$(el).textContent='n/a'}};
  lat('water_temperature','#wt',v=>v.toFixed(1)+'°F');lat('air_pressure','#pr',v=>v.toFixed(1));moon();
 }
-async function waves(){try{const j=await J(`https://marine-api.open-meteo.com/v1/marine?latitude=${SLAT}&longitude=${SLON}&hourly=wave_height,swell_wave_height,wave_period,wave_direction&length_unit=imperial&past_days=2&forecast_days=7&timezone=auto`);
+async function waves(){try{const j=await J(`https://marine-api.open-meteo.com/v1/marine?latitude=${SLAT}&longitude=${SLON}&hourly=wave_height,swell_wave_height,wave_period,wave_direction&length_unit=imperial&past_days=1&forecast_days=10&timezone=auto`);
  const t=j.hourly.time,m=k=>t.map((s,i)=>[T(s),j.hourly[k][i]]).filter(q=>q[1]!=null),w=m('wave_height'),ser=[{n:'Total',c:'#1f6f8b',p:w},{n:'Swell',c:'#c2410c',p:m('swell_wave_height'),dash:1}];
  lc($('#wv'),ser,{now:1});leg('#wvl',ser);let k=0;w.forEach((q,i)=>{if(q[0]<=Date.now())k=i});
  $('#wh').textContent=w[k][1].toFixed(1)+' ft';$('#wp').textContent=j.hourly.wave_period[k];$('#wd').textContent=j.hourly.wave_direction[k]+'°';
  const mxw=Math.max(...w.filter(q=>q[0]>Date.now()&&q[0]<Date.now()+2*864e5).map(q=>q[1]));set('wave','Waves ≤48h',mxw.toFixed(0)+' ft max',mxw>=20?2:mxw>=14?1:0)}catch(e){$('#wv').textContent='Could not load waves'}}
 
 const COL={gfs_seamless:'#1f6f8b',ecmwf_ifs025:'#c2410c',icon_seamless:'#4d7c0f',gem_seamless:'#9333ea'},NM={gfs_seamless:'GFS',ecmwf_ifs025:'ECMWF',icon_seamless:'ICON',gem_seamless:'GEM'};
-async function rain(){try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation&models=${Object.keys(COL).join(',')}&past_days=7&forecast_days=10&precipitation_unit=inch&timezone=auto`);
+async function rain(){try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation&models=${Object.keys(COL).join(',')}&past_days=7&forecast_days=16&precipitation_unit=inch&timezone=auto`);
  const t=j.hourly.time.map(T),now=Date.now(),i0=t.findIndex(x=>x>now),ser=[],rows=[];let w48=0;
  Object.keys(COL).forEach(m=>{const a=j.hourly['precipitation_'+m];if(!a||a.every(x=>x==null))return;const sm=(i,k)=>a.slice(i,k).reduce((s,x)=>s+(x||0),0),H=h=>sm(i0,i0+h);
-  let s=0;ser.push({n:NM[m],c:COL[m],p:a.slice(i0).map((x,i)=>[t[i0+i],(s+=x||0)]),x:': '+s.toFixed(1)+'"'});
+  let s=0;ser.push({n:NM[m],c:COL[m],p:a.slice(i0).map((x,i)=>x==null?null:[t[i0+i],(s+=x)]).filter(Boolean),x:': '+s.toFixed(1)+'"'});
   rows.push([NM[m],sm(Math.max(0,i0-24),i0),sm(Math.max(0,i0-72),i0),sm(0,i0),H(24),H(48),H(72),H(168),H(240)]);w48=Math.max(w48,H(48))});
+ const lab=['Next 24 h','48 h','72 h','7 days','10 days'];$('#ra').innerHTML=lab.map((l,i)=>{const v=rows.map(r=>r[4+i]);return `<div><b>${Math.min(...v).toFixed(1)}–${Math.max(...v).toFixed(1)}"</b><span class="mu">${l}</span></div>`}).join('');
  lc($('#rn2'),ser,{h:250});leg('#rnl',ser);
  $('#tb').innerHTML='<table><tr><th>Model</th><th>past 24h</th><th>past 72h</th><th>past 7d</th><th>next 24h</th><th>48h</th><th>72h</th><th>7d</th><th>10d</th></tr>'+rows.map(r=>'<tr>'+r.map((x,i)=>'<td>'+(i?x.toFixed(2):x)+'</td>').join('')+'</tr>').join('')+'</table><div class="mu">"Past" = model estimate for a roughly 10 km grid cell, not a rain gauge. Coastal ridges can get much more or less than the grid average, so compare with your own gauge.</div>';
  set('rain','Rain next 48h',w48.toFixed(1)+'" (wettest model)',lvl(w48,CFG.rain48))}catch(e){$('#rn2').textContent='Could not load models'}
- try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,soil_moisture_0_to_7cm,soil_moisture_7_to_28cm&past_days=7&forecast_days=7&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`);
- const t=j.hourly.time.map(T),m=(k,from)=>t.map((x,i)=>[x,j.hourly[k][i]]).filter(q=>q[1]!=null&&q[0]>=(from||0));
- lc($('#hr'),[{c:'#1f6f8b',p:m('precipitation',Date.now()-3*864e5)}],{bar:1,now:1,h:180});
- lc($('#ps'),[{c:'#9333ea',p:m('pressure_msl')}],{now:1,h:180});
- const w=[{n:'Wind',c:'#1f6f8b',p:m('wind_speed_10m')},{n:'Gusts',c:'#c2410c',p:m('wind_gusts_10m'),dash:1}];lc($('#wi'),w,{now:1,h:180});leg('#wil',w);
+ try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,soil_moisture_0_to_7cm,soil_moisture_7_to_28cm&past_days=7&forecast_days=10&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`);
+ const t=j.hourly.time.map(T),m=(k,from)=>t.map((x,i)=>[x,j.hourly[k][i]]).filter(q=>q[1]!=null&&q[0]>=(from||0));window.PR=m('precipitation',Date.now()-12*36e5);windows();
+ lc($('#hr'),[{c:'#1f6f8b',p:m('precipitation',Date.now()-12*36e5)}],{bar:1,now:1,h:180});
+ lc($('#ps'),[{c:'#9333ea',p:m('pressure_msl',Date.now()-36*36e5)}],{now:1,h:180});
+ const w=[{n:'Wind',c:'#1f6f8b',p:m('wind_speed_10m',Date.now()-36*36e5)},{n:'Gusts',c:'#c2410c',p:m('wind_gusts_10m',Date.now()-36*36e5),dash:1}];lc($('#wi'),w,{now:1,h:180});leg('#wil',w);
  const s=[{n:'0–7 cm',c:'#4d7c0f',p:m('soil_moisture_0_to_7cm')},{n:'7–28 cm',c:'#92400e',p:m('soil_moisture_7_to_28cm')}];lc($('#sm'),s,{now:1,h:180});leg('#sml',s);
  const cur=s[1].p.filter(q=>q[0]<=Date.now()).pop();if(cur)set('soil','Soil (7–28cm)',cur[1].toFixed(2),lvl(cur[1],CFG.soil));
  }catch(e){$('#hr').textContent='Could not load hourly data'}}
@@ -233,9 +260,9 @@ async function cams(){try{
  const env=JSON.stringify({xmin:LON-.25,ymin:LAT-.2,xmax:LON+.2,ymax:LAT+.2,spatialReference:{wkid:4326}});
  const j=await J('https://gisdata.dot.ca.gov/arcgis/rest/services/CHhighway/CCTV/FeatureServer/0/query?where=1%3D1&geometry='+encodeURIComponent(env)+'&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=*&returnGeometry=false&f=json');
  const k=(a,r)=>{const n=Object.keys(a).find(z=>r.test(z));return n?a[n]:''};
- const c=(j.features||[]).map(x=>x.attributes).map(a=>[k(a,/^locationName$/i)||k(a,/nearbyPlace/i)||k(a,/location/i)||'Caltrans camera',String(k(a,/currentImageURL|imageurl/i)).replace(/^http:/,'https:')]).filter(x=>/^https:/.test(x[1])).slice(0,10);
- if(c.length){$('#cams').innerHTML=c.map(i=>`<div class="card"><h2>${i[0]}</h2><img class="r" data-s="${i[1]}" alt="Camera offline"></div>`).join('')+'<div class="card wide mu">Cameras found automatically near your location from Caltrans. If one is blank, that camera is offline.</div>';refImgs()}
+ const c=(j.features||[]).map(x=>x.attributes).filter(a=>String(k(a,/inService/i))!='false').map(a=>[k(a,/^locationName$/i)||k(a,/nearbyPlace/i)||k(a,/location/i)||'Caltrans camera',String(k(a,/currentImageURL|imageurl/i)).replace(/^http:/,'https:'),(k(a,/UpdateDate/i)+' '+k(a,/UpdateTime/i)).trim()]).filter(x=>/^https:/.test(x[1])).slice(0,10);
+ if(c.length){$('#cams').innerHTML=c.map(i=>`<div class="card"><h2>${i[0]}</h2><a href="https://quickmap.dot.ca.gov" target="_blank"><img class="r" data-s="${i[1]}" alt="Camera offline"></a><div class="mu">${i[2]?'Camera clock: '+i[2]:''}</div></div>`).join('')+'<div class="card wide mu">Caltrans stills can freeze or show an old time. If the time looks old, that camera is stuck: open QuickMap for the live view.</div>';refImgs()}
  }catch(e){}}
-function all(){refImgs();alerts();river();tides();waves();rain();nws();cams();$('#upd').textContent='· updated '+new Date().toLocaleTimeString()}
+function all(){refImgs();alerts();river();tides();waves();rain();nws();cams();closures();$('#upd').textContent='· updated '+new Date().toLocaleTimeString()}
 all();setInterval(all,600000);
 </script></body></html>

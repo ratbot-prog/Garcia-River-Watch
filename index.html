@@ -65,7 +65,7 @@ nav a{border-color:var(--ac);color:var(--ac)}
 .hero.h2{background:linear-gradient(135deg,#8f1410,#c8102e);color:#fff}
 .hero.h2 h1,.hero.h2 .mu,.hero.h2 a{color:#ffe9a6}
 </style></head><body>
-<div class="hero"><div class="ht"><div><h1>Garcia River Watch · Oz Farm</h1><span class="badge" id="hb">Checking…</span><div class="mu"><span id="loc"></span> · <a href="#" id="setloc">📍 Set my location</a> · <a href="#" id="shr">📤 Share summary</a> <span id="upd"></span></div></div><div class="pb">Powered by:<img class="logo" alt="Oz Farm"></div></div><div class="tiles" id="tiles"></div></div>
+<div class="hero"><div class="ht"><div><h1>Garcia River Watch · Oz Farm</h1><span class="badge" id="hb">Checking…</span><div class="mu"><span id="loc"></span> · <a href="#" id="setloc">📍 Set my location</a> · <a href="#" id="shr">📤 Share summary</a> <span id="upd"></span><span id="stale"></span></div></div><div class="pb">Powered by:<img class="logo" alt="Oz Farm"></div></div><div class="tiles" id="tiles"></div></div>
 <nav><a href="#s0">Status</a><a href="#s1">River</a><a href="#s9">Roads</a><a href="#s2">Tides</a><a href="#s3">Surf</a><a href="#s4">Rain</a><a href="#s5">Forecast</a><a href="#s6">Maps</a><a href="#s7">Live</a><a href="#s8">Links</a></nav>
 
 <h3 id="s0">STATUS</h3><div class="grid">
@@ -80,7 +80,8 @@ nav a{border-color:var(--ac);color:var(--ac)}
 <div class="card wide"><h2>NWS alerts for this point</h2><div id="al" class="mu">Loading…</div></div>
 <div class="card wide"><h2>Next 24 hours, hour by hour: expected rain (inches per hour)</h2><div id="h24" class="mu">Loading…</div><div class="mu" id="h24s"></div></div>
 <div class="card wide"><h2>Rain ahead, inches (lowest–highest of the models)</h2><div class="row" id="ra">Loading…</div></div>
-<div class="card wide"><h2>Danger windows: high tide (plus current ocean anomaly) with rain in the 12 h before, next 7 days</h2><div class="hl" id="dw">Loading…</div><div class="mu">Orange = a big tide or heavy rain; red = both. Rain is one model; the anomaly is assumed to persist.</div></div></div>
+<div class="card wide"><h2>Danger windows: high tide (plus current ocean anomaly) with rain in the 12 h before, next 7 days</h2><div class="hl" id="dw">Loading…</div><div class="mu">Orange = a big tide or heavy rain; red = both. Rain is one model; the anomaly is assumed to persist.</div></div>
+<details class="card wide"><summary class="mu"><b>Data sources</b> <span id="dsum"></span></summary><table class="tl" id="dst"></table></details></div>
 
 <h3 id="s1">RIVER</h3><div class="grid">
 <div class="card wide"><h2>Garcia at Eureka Hill Rd (GRCC1 / USGS 11467590): observed 7 days + NWS forecast, ft</h2>
@@ -180,7 +181,15 @@ const LINKS={
 'Local news & info':[['Point Arena weather hub','https://pointarena.ca.gov/weather'],['Mendocino Voice','https://mendovoice.com'],['Lost Coast Outpost','https://lostcoastoutpost.com'],['KZYX','https://www.kzyx.org'],['Drought Monitor','https://droughtmonitor.unl.edu']]};
 
 const $=s=>document.querySelector(s);
-const J=u=>fetch(u).then(r=>{if(!r.ok)throw 0;return r.json()});
+const LOG={},lbl=u=>{const x=new URL(u);return x.host+'/'+x.pathname.split('/').filter(Boolean).slice(0,2).filter(z=>!/\d/.test(z)||/^v\d$/.test(z)).join('/')};
+const J=async u=>{const h=lbl(u);try{const r=await fetch(u);LOG[h]={ok:r.ok,s:r.status,t:Date.now()};if(!r.ok)throw new Error('HTTP '+r.status);return await r.json()}catch(e){if(!LOG[h]||LOG[h].ok)LOG[h]={ok:false,s:String(e.message||e),t:Date.now()};throw e}};
+async function JC(u,ttl=9e5){const k='omc_'+u.length+'_'+[...u].reduce((a,c)=>(a*31+c.charCodeAt(0))|0,7);let c=null;try{c=JSON.parse(localStorage.getItem(k)||'null')}catch(e){}
+ if(c&&Date.now()-c.t<ttl)return c.d;
+ try{const d=await J(u);const sv=()=>localStorage.setItem(k,JSON.stringify({t:Date.now(),d}));try{sv()}catch(e){try{Object.keys(localStorage).filter(x=>x.startsWith('omc_')).forEach(x=>localStorage.removeItem(x));sv()}catch(e2){}}return d}
+ catch(e){if(c&&Date.now()-c.t<432e5){window.STALE=true;return c.d}throw e}}
+function diag(){const E=Object.entries(LOG),bad=E.filter(e=>!e[1].ok);if(!$('#dsum'))return;$('#dsum').textContent=E.length?(bad.length?`· ${bad.length} of ${E.length} failing`:'· all OK'):'';$('#dsum').style.color=bad.length?'var(--r)':'var(--g)';
+ $('#dst').innerHTML='<tr><th>Source</th><th>Last result</th><th>Time</th></tr>'+E.map(e=>`<tr><td>${e[0]}</td><td class="${e[1].ok?'s0':'s2'}">${e[1].ok?'OK':'FAILED: '+e[1].s}</td><td>${new Date(e[1].t).toLocaleTimeString()}</td></tr>`).join('')+(window.STALE?'<tr><td colspan="3" class="s1">Some items are showing saved or backup data.</td></tr>':'');
+ $('#stale').textContent=window.STALE?' · ⚠ some data is saved/backup':''}
 const T=s=>+new Date(String(s).replace(' ','T'));
 const S={};
 try{const q=JSON.parse(localStorage.getItem('ozloc')||'null');if(q){LAT=q[0];LON=q[1]}}catch(e){}
@@ -190,6 +199,7 @@ $('#setloc').onclick=async e=>{e.preventDefault();const a=prompt('Enter your str
  let m=a.match(/^\s*(-?\d+\.?\d*)\s*,\s*(-?\d+\.?\d*)\s*$/);
  if(!m){try{const j=await J('https://nominatim.openstreetmap.org/search?format=json&limit=1&q='+encodeURIComponent(a));if(j[0])m=[0,j[0].lat,j[0].lon]}catch(x){}}
  if(!m){alert('Could not find that address. Use lat,lon instead (Apple Maps: press and hold on the map).');return}
+ {const R=Math.PI/180,la=+m[1],lo=+m[2],d=12742*Math.asin(Math.sqrt(Math.sin((la-38.97)*R/2)**2+Math.cos(la*R)*Math.cos(38.97*R)*Math.sin((lo+123.69)*R/2)**2));if(d>40&&!confirm('That spot is about '+Math.round(d*.621)+' miles from Manchester, CA. Use it anyway?'))return}
  localStorage.setItem('ozloc',JSON.stringify([+m[1],+m[2]]));location.reload()};
 $('#shr').onclick=async e=>{e.preventDefault();const h=(window.HIGHS||[])[0],ht=h?new Date(T(h.t)).toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'})+' '+(+h.v).toFixed(1)+' ft':'n/a',hw=S.hwy1?S.hwy1.v+(S.hwy1.l==0?' (below closing level)':' (CHECK)'):'n/a',f=v=>v!=null?v.toFixed(1):'n/a';
  const t=`Garcia River update, ${new Date().toLocaleString([],{weekday:'short',hour:'numeric',minute:'2-digit'})}\n${window.VT||''}\nRiver ${window.RT||'n/a'} (alert ${ALERT_FT} ft)\nRain: ${f(window.H24)} in next 24 h; up to ${f(window.W48)} in next 48 h\nNext high tide: ${ht}\nHwy 1 at Garcia: ${hw}\nWaves: ${(window.SN||{}).h||'n/a'}\n${location.href.split('#')[0]}`;
@@ -269,7 +279,7 @@ function roads(){const g=window.GS,fp=window.FP,n=window.NS;if(g==null)return;
  $('#rw').innerHTML='<table><tr><th>Road</th><th>Level now</th><th>Forecast peak</th><th>Floods / closes at (ft)</th><th>Status</th></tr>'+rows.join('')+'</table>';
  const h=ROADS[0];if(h[3]!=null)set('hwy1','Hwy 1 at Garcia',g.toFixed(1)+' ft vs '+h[3],(g>=h[3]||(fp!=null&&fp>=h[3]))?2:g>=h[2]?1:0)}
 function tiles(){const q=id=>($(id)||{}).textContent||'–',n=window.SN||{};
- const t=[['River',q('#stage'),q('#rate')+' per hr'],['Rain, next 24 h',window.H24!=null?window.H24.toFixed(2)+' in':'–','one model'],['Tide anomaly',q('#r24'),'24 h avg'],['Water temp',window.WT||'–','Arena Cove'],['Waves',n.h||'–',n.p||''],['Wind',n.w||'–','coast'],['Weather',window.WX||'–','NWS']];
+ const t=[['River',q('#stage'),q('#rate')+' per hr'],['Rain, next 24 h',window.H24!=null?window.H24.toFixed(2)+' in':'–','one model'],['Tide anomaly',q('#r24'),'24 h avg'],['Water temp',window.WT||'–','Arena Cove'],['Waves',n.h||'–',n.p||''],['Wind',(n.w&&n.w!='–')?n.w:windNow(),'coast'],['Weather',window.WX||'–','NWS']];
  $('#tiles').innerHTML=t.map(x=>`<div class="tile"><span>${x[0]}</span><b>${x[1]}</b><span>${x[2]}</span></div>`).join('');sp()}
 function sp(){const n=window.SN;if(!n||!$('#sp'))return;
  const hl=(window.TIDEHL||[]).filter(x=>new Date(T(x.t)).toDateString()==new Date().toDateString()).map(x=>(x.type=='H'?'High ':'Low ')+new Date(T(x.t)).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})+' · '+(+x.v).toFixed(1)+' ft').join('<br>')||'–';
@@ -314,11 +324,11 @@ async function tides(){
  const lat=async(p,el,fm)=>{try{const j=await J(b+`&product=${p}&date=latest`);$(el).textContent=fm(+j.data[0].v)}catch(e){$(el).textContent='n/a'}};
  lat('water_temperature','#wt',v=>{window.WT=v.toFixed(1)+'°F';tiles();return window.WT});lat('air_pressure','#pr',v=>v.toFixed(1));moonCard();
 }
-async function waves(){try{const j=await J(`https://marine-api.open-meteo.com/v1/marine?latitude=${SLAT}&longitude=${SLON}&hourly=wave_height,swell_wave_height,wave_period,wave_direction,swell_wave_period,swell_wave_direction&length_unit=imperial&past_days=1&forecast_days=10&timezone=auto`);
+async function waves(){try{const j=await JC(`https://marine-api.open-meteo.com/v1/marine?latitude=${SLAT}&longitude=${SLON}&hourly=wave_height,swell_wave_height,wave_period,wave_direction,swell_wave_period,swell_wave_direction&length_unit=imperial&past_days=1&forecast_days=10&timezone=auto`);
  const t=j.hourly.time,m=k=>t.map((s,i)=>[T(s),j.hourly[k][i]]).filter(q=>q[1]!=null),w=m('wave_height'),ser=[{n:'Total',c:'#1e9e50',p:w},{n:'Swell',c:'#c2410c',p:m('swell_wave_height'),dash:1}];
  lc($('#wv'),ser,{now:1});leg('#wvl',ser);let k=0;w.forEach((q,i)=>{if(q[0]<=Date.now())k=i});
  $('#wh').textContent=w[k][1].toFixed(1)+' ft';$('#wp').textContent=j.hourly.wave_period[k];$('#wd').textContent=j.hourly.wave_direction[k]+'°';
-try{const wj=await J(`https://api.open-meteo.com/v1/forecast?latitude=${SLAT}&longitude=${SLON}&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph&forecast_days=2&timezone=auto`);window.WIND={};wj.hourly.time.forEach((x,i)=>WIND[x]=[wj.hourly.wind_speed_10m[i],wj.hourly.wind_direction_10m[i]])}catch(e){window.WIND={}}
+try{const wj=await JC(`https://api.open-meteo.com/v1/forecast?latitude=${SLAT}&longitude=${SLON}&hourly=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph&forecast_days=2&timezone=auto`);window.WIND={};wj.hourly.time.forEach((x,i)=>WIND[x]=[wj.hourly.wind_speed_10m[i],wj.hourly.wind_direction_10m[i]])}catch(e){window.WIND={}}
  const dr=d=>d==null?'':['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16],f1=v=>v!=null?v.toFixed(1):'–',hh=j.hourly,sr=[];
  t.forEach((x,i)=>{const tt=T(x);if(tt>Date.now()-36e5&&tt<=Date.now()+24*36e5&&new Date(tt).getHours()%3==0){const wd=WIND[x];sr.push(`<tr><td>${new Date(tt).toLocaleString([],{weekday:'short',hour:'numeric'})}</td><td>${f1(hh.wave_height[i])} ft</td><td>${f1(hh.swell_wave_height[i])} ft @ ${hh.swell_wave_period[i]!=null?Math.round(hh.swell_wave_period[i]):'–'} s ${dr(hh.swell_wave_direction[i])}</td><td>${wd?Math.round(wd[0])+' mph '+dr(wd[1]):'–'}</td></tr>`)}});
  $('#surf').innerHTML='<table><tr><th>Time</th><th>Waves</th><th>Swell</th><th>Wind</th></tr>'+sr.join('')+'</table>';
@@ -327,7 +337,7 @@ try{const wj=await J(`https://api.open-meteo.com/v1/forecast?latitude=${SLAT}&lo
  const mxw=Math.max(...w.filter(q=>q[0]>Date.now()&&q[0]<Date.now()+2*864e5).map(q=>q[1]));set('wave','Waves ≤48h',mxw.toFixed(0)+' ft max',mxw>=20?2:mxw>=14?1:0)}catch(e){$('#wv').textContent='Could not load waves'}}
 
 const COL={gfs_seamless:'#1e9e50',ecmwf_ifs025:'#c2410c',icon_seamless:'#4d7c0f',gem_seamless:'#9333ea'},NM={gfs_seamless:'GFS',ecmwf_ifs025:'ECMWF',icon_seamless:'ICON',gem_seamless:'GEM'};
-async function rain(){try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation&models=${Object.keys(COL).join(',')}&past_days=7&forecast_days=16&precipitation_unit=inch&timezone=auto`);
+async function rain(){try{const j=await JC(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation&models=${Object.keys(COL).join(',')}&past_days=7&forecast_days=16&precipitation_unit=inch&timezone=auto`);
  const t=j.hourly.time.map(T),now=Date.now(),i0=t.findIndex(x=>x>now),ser=[],rows=[];let w48=0;
  Object.keys(COL).forEach(m=>{const a=j.hourly['precipitation_'+m];if(!a||a.every(x=>x==null))return;const sm=(i,k)=>a.slice(i,k).reduce((s,x)=>s+(x||0),0),H=h=>sm(i0,i0+h);
   let s=0;ser.push({n:NM[m],c:COL[m],p:a.slice(i0).map((x,i)=>x==null?null:[t[i0+i],(s+=x)]).filter(Boolean),x:': '+s.toFixed(1)+'"'});
@@ -336,16 +346,26 @@ async function rain(){try{const j=await J(`https://api.open-meteo.com/v1/forecas
  lc($('#rn2'),ser,{h:250});leg('#rnl',ser);
  $('#tb').innerHTML='<table><tr><th>Model</th><th>past 24h</th><th>past 72h</th><th>past 7d</th><th>next 24h</th><th>48h</th><th>72h</th><th>7d</th><th>10d</th></tr>'+rows.map(r=>'<tr>'+r.map((x,i)=>'<td>'+(i?x.toFixed(2):x)+'</td>').join('')+'</tr>').join('')+'</table><div class="mu">"Past" = model estimate for a roughly 10 km grid cell, not a rain gauge. Coastal ridges can get much more or less than the grid average, so compare with your own gauge.</div>';
  set('rain','Rain next 48h',w48.toFixed(1)+'" (wettest model)',lvl(w48,CFG.rain48))}catch(e){$('#rn2').textContent='Could not load models'}
- try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,soil_moisture_0_to_7cm,soil_moisture_7_to_28cm&past_days=7&forecast_days=10&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`);
- const t=j.hourly.time.map(T),m=(k,from)=>t.map((x,i)=>[x,j.hourly[k][i]]).filter(q=>q[1]!=null&&q[0]>=(from||0));window.PR=m('precipitation',Date.now()-12*36e5);window.WG=m('wind_gusts_10m',Date.now()-12*36e5);windows();h24();tl();
- lc($('#hr'),[{c:'#1e9e50',p:m('precipitation',Date.now()-12*36e5)}],{bar:1,now:1,h:180});
+ try{const j=await JC(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=precipitation,pressure_msl,wind_speed_10m,wind_gusts_10m,wind_direction_10m&past_days=2&forecast_days=10&precipitation_unit=inch&wind_speed_unit=mph&timezone=auto`);
+ const t=j.hourly.time.map(T),m=(k,from)=>t.map((x,i)=>[x,j.hourly[k][i]]).filter(q=>q[1]!=null&&q[0]>=(from||0));
+ window.PR=m('precipitation',Date.now()-12*36e5);window.WG=m('wind_gusts_10m',Date.now()-12*36e5);window.WINDF={};j.hourly.time.forEach((x,i)=>{window.WINDF[x]=[j.hourly.wind_speed_10m[i],j.hourly.wind_direction_10m[i]]});windows();h24();tl();
+ lc($('#hr'),[{c:'#1e9e50',p:window.PR}],{bar:1,now:1,h:180});
  lc($('#ps'),[{c:'#9333ea',p:m('pressure_msl',Date.now()-36*36e5)}],{now:1,h:180});
- const w=[{n:'Wind',c:'#1e9e50',p:m('wind_speed_10m',Date.now()-36*36e5)},{n:'Gusts',c:'#c2410c',p:m('wind_gusts_10m',Date.now()-36*36e5),dash:1}];lc($('#wi'),w,{now:1,h:180});leg('#wil',w);
+ const w=[{n:'Wind',c:'#1e9e50',p:m('wind_speed_10m',Date.now()-36*36e5)},{n:'Gusts',c:'#c2410c',p:m('wind_gusts_10m',Date.now()-36*36e5),dash:1}];lc($('#wi'),w,{now:1,h:180});leg('#wil',w);tiles()
+ }catch(e){$('#hr').textContent='Could not load the hourly forecast. Trying the NWS backup…';await gridFallback()}
+ try{const j=await JC(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&hourly=soil_moisture_0_to_7cm,soil_moisture_7_to_28cm&past_days=7&forecast_days=7&timezone=auto`,18e5);
+ const t=j.hourly.time.map(T),m=k=>t.map((x,i)=>[x,j.hourly[k][i]]).filter(q=>q[1]!=null);
  const s=[{n:'0–7 cm',c:'#4d7c0f',p:m('soil_moisture_0_to_7cm')},{n:'7–28 cm',c:'#92400e',p:m('soil_moisture_7_to_28cm')}];lc($('#sm'),s,{now:1,h:180});leg('#sml',s);
  const cur=s[1].p.filter(q=>q[0]<=Date.now()).pop();window.SOIL=cur?cur[1]:null;season();if(cur)set('soil','Soil (7–28cm)',cur[1].toFixed(2),lvl(cur[1],CFG.soil));
- }catch(e){$('#hr').textContent='Could not load hourly data'}}
+ }catch(e){$('#sm').textContent='Could not load soil data'}}
+async function gridFallback(){try{if(window.PR&&window.PR.length)return;const u=window.GRIDURL||(await J(`https://api.weather.gov/points/${LAT.toFixed(4)},${LON.toFixed(4)}`)).properties.forecastGridData,g=(await J(u)).properties;
+ const hrs=d=>{const m=d.match(/P(?:(\d+)D)?T?(?:(\d+)H)?/);return (+(m&&m[1]||0))*24+(+(m&&m[2]||0))||1};
+ const spread=(a,f)=>{const o=[];((a&&a.values)||[]).forEach(v=>{const [st,du]=v.validTime.split('/'),t0=+new Date(st),h=hrs(du);for(let i=0;i<h;i++)o.push([t0+i*36e5,f(v.value,h)])});return o};
+ window.PR=spread(g.quantitativePrecipitation,(v,h)=>(v||0)/25.4/h).filter(q=>q[0]>=Date.now()-12*36e5);window.WG=spread(g.windGust,v=>(v||0)*0.621371);
+ window.STALE=true;$('#hr').textContent='Hourly rain from the NWS backup (Open-Meteo unavailable).';lc($('#hr'),[{c:'#1e9e50',p:window.PR}],{bar:1,now:1,h:180});h24();tl();windows();tiles()}catch(e){}}
+function windNow(){const W=window.WINDF;if(!W)return '–';const k=Object.keys(W).find(z=>T(z)>=Date.now()-18e5),w=W[k],dr=d=>['N','NNE','NE','ENE','E','ESE','SE','SSE','S','SSW','SW','WSW','W','WNW','NW','NNW'][Math.round(d/22.5)%16];return w?Math.round(w[0])+' mph '+dr(w[1]):'–'}
 
-async function nws(){try{const p=await J(`https://api.weather.gov/points/${LAT.toFixed(4)},${LON.toFixed(4)}`);const f=await J(p.properties.forecast);
+async function nws(){try{const p=await J(`https://api.weather.gov/points/${LAT.toFixed(4)},${LON.toFixed(4)}`);window.GRIDURL=p.properties.forecastGridData;const f=await J(p.properties.forecast);
  $('#fc').innerHTML=f.properties.periods.slice(0,8).map(x=>`<div class="p"><b>${x.name}</b> · ${x.temperature}°${x.temperatureUnit}<br>${x.detailedForecast}</div>`).join('');const p0=f.properties.periods[0];window.WX=p0.shortForecast+', '+p0.temperature+'°';tiles()}catch(e){$('#fc').textContent='Could not load NWS forecast'}
  try{const l=await J('https://api.weather.gov/products/types/AFD/locations/EKA');const d=await J(l['@graph'][0]['@id']);$('#afd').innerHTML=nwsFmt(d.productText)+'<details><summary class="mu">Raw text</summary><pre>'+d.productText.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</pre></details>'}catch(e){$('#afd').textContent='Could not load – see weather.gov/eka'}}
 
@@ -366,11 +386,11 @@ function hsr(){const H=window.HH;if(!H||!$('#hs'))return;const w=window.W48,f1=v
  const hit=w!=null?H.bins.find(b=>w>=b[0]&&w<b[1]):null;
  const line=hit&&hit[2]?`Forecast 48 h rain (wettest model): ${w.toFixed(1)} in. On the ${hit[2]} past days with that much rain, the river peaked at a median ${f1(hit[3])} ft (highest ${f1(hit[4])} ft) and reached ${ALERT_FT} ft on ${hit[5]}% of them.`:'Waiting for the rain forecast to compare.';
  $('#hs').innerHTML=`<p>${line}</p><table><tr><th>48 h rain before</th><th>Days</th><th>Median peak ft</th><th>Highest ft</th><th>≥ ${ALERT_FT} ft</th></tr>${rows}</table><h2 style="margin-top:12px">Recent big events (stage ≥ ${ALERT_FT-1} ft)</h2>`+(H.ev.length?'<table><tr><th>Peak day</th><th>Peak ft</th><th>3-day rain, in</th></tr>'+H.ev.map(e=>`<tr><td>${e[0]}</td><td>${e[1].toFixed(1)}</td><td>${f1(e[2])}</td></tr>`).join('')+'</table>':'<div>None that high in the gauge record.</div>')+`<div class="mu">Gauge record: ${H.n} days from ${H.d0}. Daily peak stage from USGS (may be provisional); rain is a weather reanalysis, so totals are approximate. Tides not included.</div>`}
-async function history(){try{const key='ozh2_'+LAT.toFixed(2)+LON.toFixed(2)+new Date().toDateString();let H=null;try{H=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
+async function history(){try{const key='ozh2_'+LAT.toFixed(2)+LON.toFixed(2)+Math.floor(Date.now()/6048e5);let H=null;try{H=JSON.parse(localStorage.getItem(key)||'null')}catch(e){}
  if(!H){const dv=await J('https://waterservices.usgs.gov/nwis/dv/?format=json&sites=11467590&parameterCd=00065&statCd=00001,00003&startDT=2000-01-01'),by={};
   dv.value.timeSeries.forEach(t=>{const sc=((t.variable.options||{}).option||[]).map(o=>o.optionCode).find(c=>/^000\d\d$/.test(c))||'x';by[sc]=t.values[0].value.filter(v=>+v.value>-100).map(v=>[v.dateTime.slice(0,10),+v.value])});
   const st=(by['00001']&&by['00001'].length?by['00001']:Object.values(by).sort((a,b)=>b.length-a.length)[0])||[];if(st.length<30)throw 0;
-  const y=new Date(Date.now()-4*864e5).toISOString().slice(0,10),ar=await J(`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&start_date=2000-10-01&end_date=${y}&daily=precipitation_sum&precipitation_unit=inch&timezone=auto`),rain={};
+  const y=new Date(Date.now()-4*864e5).toISOString().slice(0,10),ar=await J(`https://archive-api.open-meteo.com/v1/archive?latitude=${LAT}&longitude=${LON}&start_date=2008-10-01&end_date=${y}&daily=precipitation_sum&precipitation_unit=inch&timezone=auto`),rain={};
   ar.daily.time.forEach((d,i)=>rain[d]=ar.daily.precipitation_sum[i]);
   const sm={};st.forEach(q=>sm[q[0]]=q[1]);const sh=(d,k)=>new Date(+new Date(d+'T12:00:00Z')+k*864e5).toISOString().slice(0,10),edges=[0,.5,1,2,3,4,99],bins=edges.slice(0,-1).map((lo,i)=>[lo,edges[i+1],[]]);
   st.forEach(q=>{const d=q[0],a=rain[d],b2=rain[sh(d,-1)];if(a==null||b2==null)return;const r=a+b2,pk=Math.max(q[1],sm[sh(d,1)]||0),b=bins.find(b=>r>=b[0]&&r<b[1]);if(b)b[2].push(pk)});
@@ -383,7 +403,7 @@ async function history(){try{const key='ozh2_'+LAT.toFixed(2)+LON.toFixed(2)+new
 function season(){const H=window.HH;if(!H||!$('#ss'))return;const [d0,arr]=H.rd,base=+new Date(d0+'T12:00:00Z'),n=new Date(),yr=n.getMonth()>=9?n.getFullYear():n.getFullYear()-1,idx=(y,m,d)=>Math.round((Date.UTC(y,m,d,12)-base)/864e5),L=arr.length-1,ld=new Date(base+L*864e5),lm=ld.getUTCMonth(),dd=ld.getUTCDate();
  const sum=(a,b)=>{let s=0,c=0;for(let i=Math.max(a,0);i<=Math.min(b,L);i++)if(arr[i]!=null){s+=arr[i];c++}return c?s:null};
  const cur=sum(idx(yr,9,1),L);let tot=0,cnt=0,t14=0,c14=0;
- for(let Y=2000;Y<yr;Y++){const e=idx(lm>=9?Y:Y+1,lm,dd),a=sum(idx(Y,9,1),e),b=sum(e-13,e);if(a!=null){tot+=a;cnt++}if(b!=null){t14+=b;c14++}}
+ for(let Y=2008;Y<yr;Y++){const e=idx(lm>=9?Y:Y+1,lm,dd),a=sum(idx(Y,9,1),e),b=sum(e-13,e);if(a!=null){tot+=a;cnt++}if(b!=null){t14+=b;c14++}}
  const avg=cnt?tot/cnt:null,a14=c14?t14/c14:null,l14=sum(L-13,L),sv=window.SOIL,wet=sv==null?'–':sv<.30?'dry':sv<.40?'moist':sv<CFG.soil[1]?'wet':'saturated',f=v=>v!=null?v.toFixed(1)+' in':'–';
  $('#ss').innerHTML=[['Rain since Oct 1',f(cur)],['Average to this date',f(avg)],['Percent of average',avg&&cur!=null?Math.round(100*cur/avg)+'%':'–'],['Last 14 days',f(l14)],['Typical for 14 days',f(a14)],['Ground, model 7–28 cm',sv!=null?sv.toFixed(2)+' · '+wet:'–']].map(x=>`<div><b>${x[1]}</b><span class="mu">${x[0]}</span></div>`).join('');
  $('#ssn').textContent='Through '+ld.toISOString().slice(0,10)+'. Modeled rain for your location, not a gauge; averages use water years from 2000. Ground wetness is a model estimate.'}
@@ -422,8 +442,8 @@ async function moonCard(){const now=Date.now(),k0=Math.floor((now/864e5+2440587.
   if(m==8||m==9){const c=fl.filter(x=>{const z=new Date(x.t);return z.getFullYear()==y&&(z.getMonth()==8||z.getMonth()==9)}),eq=Date.UTC(y,8,22,12),h=c.reduce((a,b)=>Math.abs(b.t-eq)<Math.abs(a.t-eq)?b:a);return h===e?'Harvest Moon':m==8?'Corn Moon':"Hunter's Moon"}
   return ['Wolf','Snow','Worm','Pink','Flower','Strawberry','Buck','Sturgeon','Corn',"Hunter's",'Beaver','Cold'][m]+' Moon'};
  const f2=t=>new Date(t).toLocaleString([],{weekday:'short',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}),nf=fl.find(e=>e.t>now),nx=nw.find(e=>e.t>now);
- let sun='';try{const j=await J(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=sunrise,sunset&timezone=auto&forecast_days=1`),tm=x=>new Date(T(x)).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});sun=`<div>Sunrise ${tm(j.daily.sunrise[0])} · Sunset ${tm(j.daily.sunset[0])}</div>`}catch(e){}
+ let sun='';try{const j=await JC(`https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&daily=sunrise,sunset&timezone=auto&forecast_days=1`),tm=x=>new Date(T(x)).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});sun=`<div>Sunrise ${tm(j.daily.sunrise[0])} · Sunset ${tm(j.daily.sunset[0])}</div>`}catch(e){}
  $('#mc').innerHTML=`<div style="font-size:42px;line-height:1.1">${ph[0]}</div><div style="color:var(--tx)"><b>${ph[1]}</b> · ${il}% lit</div>${sun}<div style="margin-top:6px">Next full: <b>${nameOf(nf)}</b>, ${f2(nf.t)}<br>Next new: ${f2(nx.t)}</div><table class="tl" style="margin-top:8px"><tr><th>Upcoming full moons</th><th>Name</th></tr>${fl.filter(e=>e.t>now).slice(0,5).map(e=>`<tr><td>${f2(e.t)}</td><td>${nameOf(e)}</td></tr>`).join('')}</table><div style="margin-top:6px">Big tides run about 1–3 days after a new or full moon. Names are the traditional ones. <a href="https://www.timeanddate.com/moon/phases/" target="_blank">Moon phases</a> · <a href="https://tides4fishing.com/us/california/point-arena" target="_blank">Tides4Fishing</a></div>`}
-function all(){refImgs();alerts();river();tides();waves();rain();nws();cams();closures();marine();history();tideSeason();$('#upd').textContent='· updated '+new Date().toLocaleTimeString()}
-all();setInterval(all,600000);
+function all(){refImgs();alerts();river();tides();waves();rain();nws();cams();closures();marine();tideSeason();$('#upd').textContent='· updated '+new Date().toLocaleTimeString();setTimeout(diag,8000);setTimeout(diag,25000)}
+all();history();setInterval(all,600000);
 </script></body></html>
